@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "POST",
+        "url": "/rest/v1/schemas"
+    },
+    "response": {
+        "status": 200,
+        "body": "{\"source\":{{{jsonPath request.body '$.source'}}},\"majorVersion\":{{{jsonPath request.body '$.source.majorVersion'}}},\"minorVersion\":0}",
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}

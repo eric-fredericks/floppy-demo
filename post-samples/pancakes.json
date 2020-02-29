@@ -1,0 +1,60 @@
+{
+  "info" : {
+    "title" : "Pancakes",
+    "category" : "Breakfast"
+  },
+  "ingredients" : [ {
+    "quantity" : {
+      "numerator" : 3,
+      "denominator" : 4
+    },
+    "unit" : "cup",
+    "description" : "flour"
+  }, {
+    "quantity" : {
+      "numerator" : 1,
+      "denominator" : 1
+    },
+    "unit" : "tbsp",
+    "description" : "sugar"
+  }, {
+    "quantity" : {
+      "numerator" : 1,
+      "denominator" : 2
+    },
+    "unit" : "tbsp",
+    "description" : "baking powder"
+  }, {
+    "unit" : "A few sprinkles",
+    "description" : "cinnamon"
+  }, {
+    "quantity" : {
+      "numerator" : 1,
+      "denominator" : 1
+    },
+    "description" : "egg"
+  }, {
+    "quantity" : {
+      "numerator" : 2,
+      "denominator" : 1
+    },
+    "unit" : "tbsp",
+    "description" : "cooking oil"
+  }, {
+    "quantity" : {
+      "numerator" : 3,
+      "denominator" : 4
+    },
+    "unit" : "cup",
+    "description" : "skim milk"
+  }, {
+    "quantity" : {
+      "numerator" : 1,
+      "denominator" : 4
+    },
+    "unit" : "tsp",
+    "description" : "vanilla extract"
+  } ],
+  "directions" : [ "Turn oven on to Warm setting (180 degrees).", "Mix dry ingredients in a medium bowl.", "Beat egg in a small bowl.", "Add liquid ingredients to egg and mix well.", "Combine liquid ingredients with dry ingredients and stir with a fork until just mixed, scraping the bottom of the bowl.", "Spray large square pan (or melt butter in pan).", "When pan is hot, drop 1/4 cup of batter on pan per pancake.", "When bubbles begin to form, flip pancakes. Watch closely.", "Transfer each pancake to warm oven to keep warm." ]
+}
+

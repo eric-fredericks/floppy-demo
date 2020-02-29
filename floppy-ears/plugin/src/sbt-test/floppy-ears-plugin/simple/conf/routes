@@ -1,0 +1,10 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+POST    /rest/sample/v1/postmethodwithrequestandresponse      org.kalergic.floppyears.plugintest.SampleController.postMethodWithRequestAndResponse(str: String)
+POST    /rest/sample/v1/postmethodwithrequest                 org.kalergic.floppyears.plugintest.SampleController.postMethodWithRequest(str1, int1: Int, str2: Option[String])
+GET     /rest/sample/v1/getmethodwithresponse/:dependentId    org.kalergic.floppyears.plugintest.SampleController.getMethodWithResponse(someId: SomeId, fooBar: Option[Boolean], baz: Option[Boolean], bing: Boolean, strs1: Seq[String], strs2: Seq[String], strs3: Seq[String], ints: Seq[Int], ints1: Seq[Int], ids: List[SomeId], dependentId: SomeId, otherId: Option[SomeId], aThirdId: Option[SomeId], aFourthId: Option[SomeId], id: Int, ln: Long, fl: Float, db: Double, str: String)
+GET     /rest/sample/v1/getmethodwithnoparam                  org.kalergic.floppyears.plugintest.SampleController.getMethodWithNoParam
+POST    /rest/sample/v1/postwithtransformations               org.kalergic.floppyears.plugintest.SampleController.postMethodWithTransformedRequestAndResponse
+POST    /rest/sample/v1/anotherpostwithtransformations        org.kalergic.floppyears.plugintest.SampleController.anotherPostMethodWithParsedBodyAndTransformations

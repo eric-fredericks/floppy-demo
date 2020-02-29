@@ -1,0 +1,13 @@
+{
+    "request": {
+        "method": "POST",
+        "url": "/rest/v1/events"
+    },
+    "response": {
+        "status": 200,
+        "jsonBody": {"eventId": "{{randomValue type='UUID'}}" },
+        "headers": {
+            "Content-Type": "application/json"
+        }
+    }
+}
