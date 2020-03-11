@@ -10,3 +10,5 @@ $ java -jar ./wiremock-standalone-2.26.3.jar --global-response-templating
 4. Execute in browser:
 http://localhost:9000/rest/v1/recipes
 
+5. Wiremock: show data
+$  curl http://localhost:8080/__admin/requests
