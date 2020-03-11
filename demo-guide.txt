@@ -1,0 +1,12 @@
+Notes for demo:
+
+1. Run wiremock
+$ java -jar ./wiremock-standalone-2.26.3.jar --global-response-templating
+
+2. Build floppy-ears.
+
+3. Build recipe.
+
+4. Execute in browser:
+http://localhost:9000/rest/v1/recipes
+
