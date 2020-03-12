@@ -16,7 +16,7 @@ object ExecutionContextTags {
   sealed trait FloppyEarsEC
 }
 
-private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_], E](
+private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_]](
   actionContext: ActionContext[R],
   source: WiretapSource,
   playEC: ExecutionContext @@ ExecutionContextTags.PlayEC, // No implicits! We want to tell the compiler which one we want!
@@ -41,7 +41,8 @@ private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_], E](
   )
 
   override def invokeBlock[A](request: R[A], block: R[A] => Future[Result]): Future[Result] = {
-    val resultF = block(request).andThen {
+    val resultF = block(request)
+    resultF.andThen {
       case tryResult =>
         tap(request, tryResult)
     }(tapEC)
@@ -56,10 +57,10 @@ private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_], E](
           val event = createEvent(request)(extractUserId)(extractSessionId)(bytes)
           client.sendEvent(source, event).onComplete {
             case Success(_) => logger.debug(s"Completed sending event for source=$source")
-            case Failure(e) => logger.warn("Error reporting data", e)
+            case Failure(e) => logger.error("Error reporting data", e)
           }(tapEC)
 
-        case Failure(_) => logger.debug("Reporting skipped, consumption of result failed!")
+        case Failure(e) => logger.error("Reporting skipped, materialization failed!", e)
       }(tapEC)
     } else {
       logger.debug("Reporting skipped because non-successful status")
@@ -81,7 +82,7 @@ object FloppyEarsActionFunction {
 
       sourceFor(actionDef).map { source =>
         val tapEC: ExecutionContext = dispatchers.lookup("floppy-ears")
-        actionBuilder andThen new FloppyEarsActionFunction[R, E](
+        actionBuilder andThen new FloppyEarsActionFunction[R](
           actionContext,
           source,
           playEC = playEC,
