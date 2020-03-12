@@ -37,7 +37,7 @@ An SBT plugin that generates code to enable integration with Floppy Ears.
    
 3. Annotate your code and add appropriate JSON formatting support.
 
-    - Add the extended annotations to get the code generator going. It generates a Floppy Ears event case class and supporting code for every intercepted method.
+    - Add the extended annotations to get the code generator going. It generates a Floppy Ears event case class and supporting code for every intercepted method. **You must use these on _controller traits_.**
       - Use `@Wiretap` to designate a method as having intercept support.
         - Use the `majorVersion` parameter to indicate the major version to use when registering the schema.
         - **Important: The parameter names in the controller trait methods must match the parameter names used in the Play routes file.**  
