@@ -42,10 +42,11 @@ private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_]](
 
   override def invokeBlock[A](request: R[A], block: R[A] => Future[Result]): Future[Result] = {
     val resultF = block(request)
-    resultF.andThen {
-      case tryResult =>
-        tap(request, tryResult)
+
+    resultF.onComplete { tryResult =>
+      tap(request, tryResult)
     }(tapEC)
+
     // Return the future returned by the application.
     resultF
   }
