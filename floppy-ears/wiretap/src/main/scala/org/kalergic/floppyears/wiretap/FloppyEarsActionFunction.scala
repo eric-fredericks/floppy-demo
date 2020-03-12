@@ -17,11 +17,12 @@ object ExecutionContextTags {
 }
 
 private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_]](
-  actionContext: ActionContext[R],
-  source: WiretapSource,
-  playEC: ExecutionContext @@ ExecutionContextTags.PlayEC, // No implicits! We want to tell the compiler which one we want!
-  tapEC: ExecutionContext @@ ExecutionContextTags.FloppyEarsEC // No implicits! We want to tell the compiler which one we want!
-)(implicit floppyContext: FloppyEarsContext[R]) extends ActionFunction[R, R] {
+    actionContext: ActionContext[R],
+    source: WiretapSource,
+    playEC: ExecutionContext @@ ExecutionContextTags.PlayEC, // No implicits! We want to tell the compiler which one we want!
+    tapEC: ExecutionContext @@ ExecutionContextTags.FloppyEarsEC // No implicits! We want to tell the compiler which one we want!
+)(implicit floppyContext: FloppyEarsContext[R])
+    extends ActionFunction[R, R] {
 
   import actionContext._
   import floppyContext._
@@ -40,7 +41,10 @@ private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_]](
     atMost = 5 seconds
   )
 
-  override def invokeBlock[A](request: R[A], block: R[A] => Future[Result]): Future[Result] = {
+  override def invokeBlock[A](
+      request: R[A],
+      block: R[A] => Future[Result]
+  ): Future[Result] = {
     val resultF = block(request)
 
     resultF.onComplete { tryResult =>
@@ -51,50 +55,66 @@ private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_]](
     resultF
   }
 
-  private[this] def tap[A](request: R[A], tryResult: Try[Result]): Unit = tryResult.map { result =>
-    if (result.header.status >= 200 && result.header.status < 300) {
-      result.body.consumeData.onComplete {
-        case Success(bytes) =>
-          val event = createEvent(request)(extractUserId)(extractSessionId)(bytes)
-          client.sendEvent(source, event).onComplete {
-            case Success(_) => logger.debug(s"Completed sending event for source=$source")
-            case Failure(e) => logger.error("Error reporting data", e)
-          }(tapEC)
+  private[this] def tap[A](request: R[A], tryResult: Try[Result]): Unit =
+    tryResult
+      .map { result =>
+        if (result.header.status >= 200 && result.header.status < 300) {
+          result.body.consumeData.onComplete {
+            case Success(bytes) =>
+              val event =
+                createEvent(request)(extractUserId)(extractSessionId)(bytes)
+              client
+                .sendEvent(source, event)
+                .onComplete {
+                  case Success(_) =>
+                    logger.debug(s"Completed sending event for source=$source")
+                  case Failure(e) => logger.error("Error reporting data", e)
+                }(tapEC)
 
-        case Failure(e) => logger.error("Reporting skipped, materialization failed!", e)
-      }(tapEC)
-    } else {
-      logger.debug("Reporting skipped because non-successful status")
-    }
-  }.recover {
-    case NonFatal(_) =>
-      logger.debug("Reporting skipped because future failed")
-  }
+            case Failure(e) =>
+              logger.error("Reporting skipped, materialization failed!", e)
+          }(tapEC)
+        } else {
+          logger.debug("Reporting skipped because non-successful status")
+        }
+      }
+      .recover {
+        case NonFatal(_) =>
+          logger.debug("Reporting skipped because future failed")
+      }
 }
 
 object FloppyEarsActionFunction {
 
   private[this] val logger = Logger(this.getClass)
 
-  implicit class ActionBuilderOps[R[_] <: Request[_], B](actionBuilder: ActionBuilder[R, B]) {
-    def withFloppyEars[E](actionContext: ActionContext[R])(implicit floppyContext: FloppyEarsContext[R]): ActionBuilder[R, B] = {
+  implicit class ActionBuilderOps[R[_] <: Request[_], B](
+      actionBuilder: ActionBuilder[R, B]
+  ) {
+    def withFloppyEars[E](
+        actionContext: ActionContext[R]
+    )(implicit floppyContext: FloppyEarsContext[R]): ActionBuilder[R, B] = {
       import actionContext._
       import floppyContext._
 
-      sourceFor(actionDef).map { source =>
-        val tapEC: ExecutionContext = dispatchers.lookup("floppy-ears")
-        actionBuilder andThen new FloppyEarsActionFunction[R](
-          actionContext,
-          source,
-          playEC = playEC,
-          tapEC = tapEC.taggedWith[FloppyEarsEC]
-        )
-      }.getOrElse {
-        // In case of a hotfix that breaks the schema, we need to be able to override the Floppy Ears interception behavior
-        // to recover
-        logger.info(s"Wiretap intercept bypass enabled for $actionDef. Events will not be forwarded to Floppy Ears.")
-        actionBuilder
-      }
+      sourceFor(actionDef)
+        .map { source =>
+          val tapEC: ExecutionContext = dispatchers.lookup("floppy-ears")
+          actionBuilder andThen new FloppyEarsActionFunction[R](
+            actionContext,
+            source,
+            playEC = playEC,
+            tapEC = tapEC.taggedWith[FloppyEarsEC]
+          )
+        }
+        .getOrElse {
+          // In case of a hotfix that breaks the schema, we need to be able to override the Floppy Ears interception behavior
+          // to recover
+          logger.info(
+            s"Wiretap intercept bypass enabled for $actionDef. Events will not be forwarded to Floppy Ears."
+          )
+          actionBuilder
+        }
     }
   }
 }

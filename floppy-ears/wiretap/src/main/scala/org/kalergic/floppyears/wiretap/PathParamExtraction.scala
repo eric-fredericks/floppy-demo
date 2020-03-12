@@ -27,27 +27,35 @@ object PathParamExtraction {
   // Cache the route pattern metadata so you don't have to compute it over and over.
   // This data includes the path variable names and the search pattern to use on a
   // request url to dynamically extract the values for a particular request.
-  private[this] case class RoutePatternMeta(pathVarNames: Seq[String], searchPattern: String)
-  private[this] val routeCache = new concurrent.TrieMap[String, RoutePatternMeta]
+  private[this] case class RoutePatternMeta(
+      pathVarNames: Seq[String],
+      searchPattern: String
+  )
+  private[this] val routeCache =
+    new concurrent.TrieMap[String, RoutePatternMeta]
 
   // Type class to extract the path params from the request.
   implicit class PathParamsExtractor[R[_] <: Request[_]](request: R[_]) {
 
     def pathParams: Map[String, Seq[String]] = {
-      getRoutePatternMeta(request).map { meta =>
+      getRoutePatternMeta(request)
+        .map { meta =>
+          val values: Seq[String] = extractPathParamValues(request, meta)
 
-        val values: Seq[String] = extractPathParamValues(request, meta)
+          // We will merge the pathParams with the queryParams provided by Play in the generated code.
+          // The type must be Map[String,Seq[String]].
+          meta.pathVarNames.zip(values).toMap.map {
+            case (k, v) => (k, Seq(v))
+          }
 
-        // We will merge the pathParams with the queryParams provided by Play in the generated code.
-        // The type must be Map[String,Seq[String]].
-        meta.pathVarNames.zip(values).toMap.map {
-          case (k, v) => (k, Seq(v))
         }
-
-      }.getOrElse(Map.empty)
+        .getOrElse(Map.empty)
     }
 
-    private[this] def extractPathParamValues(request: R[_], meta: RoutePatternMeta): Seq[String] = {
+    private[this] def extractPathParamValues(
+        request: R[_],
+        meta: RoutePatternMeta
+    ): Seq[String] = {
       // For some reason the scala API isn't working as I'd expect. The code below using the Java Regex API is working.
       // I'm leaving this commented out in case we ever want to revisit this.
       // meta.searchPattern.r.findAllIn(request.path).toSeq
@@ -57,29 +65,40 @@ object PathParamExtraction {
       if (mat.find) {
         for (i <- 1 to mat.groupCount) yield mat.group(i)
       } else {
-        logger.warn(s"Param values not found for request with path ${request.path}")
+        logger.warn(
+          s"Param values not found for request with path ${request.path}"
+        )
         Seq.empty
       }
     }
   }
 
-  private[PathParamExtraction] val extractPathParamKeys: String => RoutePatternMeta = {
-    routePattern =>
-      val keys: Seq[String] = PathParamKeyPattern.r.findAllMatchIn(routePattern).toList.flatMap {
+  private[PathParamExtraction] val extractPathParamKeys
+      : String => RoutePatternMeta = { routePattern =>
+    val keys: Seq[String] =
+      PathParamKeyPattern.r.findAllMatchIn(routePattern).toList.flatMap {
         case Groups(extractedGroups) => Some(extractedGroups)
-        case _ => None
+        case _                       => None
       }
-      // Each path param will need to be extracted from the correct position in the route pattern.
-      val searchPattern = PathParamKeyPattern.r.replaceAllIn(routePattern, "([^/]+)")
-      RoutePatternMeta(keys, searchPattern)
+    // Each path param will need to be extracted from the correct position in the route pattern.
+    val searchPattern =
+      PathParamKeyPattern.r.replaceAllIn(routePattern, "([^/]+)")
+    RoutePatternMeta(keys, searchPattern)
   }
 
-  private[PathParamExtraction] def getRoutePatternMeta[R[_] <: Request[_]](request: R[_]): Option[RoutePatternMeta] =
+  private[PathParamExtraction] def getRoutePatternMeta[R[_] <: Request[_]](
+      request: R[_]
+  ): Option[RoutePatternMeta] =
     // Play tags every request with the route pattern it used to determine where to dispatch the request.
-    request.attrs.get(Router.Attrs.HandlerDef).map { handlerDef =>
-      handlerDef.path
-    }.map {
-      routePattern =>
-        routeCache.getOrElseUpdate(routePattern, extractPathParamKeys(routePattern))
-    }
+    request.attrs
+      .get(Router.Attrs.HandlerDef)
+      .map { handlerDef =>
+        handlerDef.path
+      }
+      .map { routePattern =>
+        routeCache.getOrElseUpdate(
+          routePattern,
+          extractPathParamKeys(routePattern)
+        )
+      }
 }

@@ -10,7 +10,7 @@ object Dependencies {
 
   val avro4s = "com.sksamuel.avro4s" %% "avro4s-core" % avro4sVersion
 
-  val play = "com.typesafe.play" %% "play" % playVersion exclude("com.typesafe.play", "play-json_2.13")
+  val play = "com.typesafe.play" %% "play" % playVersion exclude ("com.typesafe.play", "play-json_2.13")
 
   val playRoutesCompiler = "com.typesafe.play" %% "routes-compiler" % playVersion
   val scalameta = "org.scalameta" %% "scalameta" % scalametaVersion

@@ -19,19 +19,24 @@ class FakeFloppyEarsClient extends FloppyEarsClient {
   @volatile var _sleepOnRegistrationMillis: Long = 0
 
   @volatile var _failSendEvent: Boolean = false
-  @volatile var _failureException: Exception = new Exception("Intentionally thrown by test")
+  @volatile var _failureException: Exception = new Exception(
+    "Intentionally thrown by test"
+  )
 
   @volatile var _schemaRegistrations: List[SchemaRegistration] = List.empty
   @volatile var _events: List[SendEvent] = List.empty
 
-  override def registerSchema(source: WiretapSource, schema: Schema): Future[Unit] =
+  override def registerSchema(
+      source: WiretapSource,
+      schema: Schema
+  ): Future[Unit] =
     if (_failRegistration) {
       Future.failed(_failureException)
     } else {
       Future {
         if (_sleepOnRegistrationMillis > 0) {
           // Go async -- user is testing a timeout
-            Thread.sleep(_sleepOnRegistrationMillis)
+          Thread.sleep(_sleepOnRegistrationMillis)
         }
         _schemaRegistrations +:= SchemaRegistration(source, schema)
       }

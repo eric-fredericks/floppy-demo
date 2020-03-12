@@ -8,13 +8,18 @@ import scala.meta.inputs.Input
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,String]], inFilePath: Path, parsedSource: Source) {
+private[codegen] class FloppyEarsSupportGenerator(
+    routes: Map[String, Map[String, String]],
+    inFilePath: Path,
+    parsedSource: Source
+) {
   import AnnotationDefinitions._
   import AnnotationParsing._
   import FloppyEarsSupportGenerator._
 
   // A place to hold the generated code in string form
-  private[this] val outputBuilder: mutable.Builder[String, List[String]] = List.newBuilder[String]
+  private[this] val outputBuilder: mutable.Builder[String, List[String]] =
+    List.newBuilder[String]
   private[this] val importSet: mutable.Set[String] = mutable.Set.empty
 
   def generate(): Try[String] = Try {
@@ -39,30 +44,46 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
         startObject(objName)
       case q"package $ref { ..$_ }   " =>
         throw new Exception(s"Inner package $ref not supported in $inFilePath")
-      case imp@q"import ..$_" =>
+      case imp @ q"import ..$_" =>
         importSet += imp.syntax
       case q"..$mods def $mthName[..$typeParams](...$methodParams): $_ " =>
         val methodName = mthName.syntax
         val parsedMethodAnnotations = mods.parseAnnotations(s"$inFilePath")
-        if(parsedMethodAnnotations.specifiesFloppyEarsInterceptable) {
-          val fullyQualifiedMethodName = buildFullyQualifiedMethodName(currentPackageName, currentTraitName, methodName)
-          withInterceptedMethodSupport(fullyQualifiedMethodName, methodName, parsedMethodAnnotations, typeParams, methodParams)
+        if (parsedMethodAnnotations.specifiesFloppyEarsInterceptable) {
+          val fullyQualifiedMethodName = buildFullyQualifiedMethodName(
+            currentPackageName,
+            currentTraitName,
+            methodName
+          )
+          withInterceptedMethodSupport(
+            fullyQualifiedMethodName,
+            methodName,
+            parsedMethodAnnotations,
+            typeParams,
+            methodParams
+          )
           codeGenerated = true
         }
     }
     endObject()
 
     // If we never found anything to generate (a method properly annotated), just throw away the package and imports and empty object.
-    if(!codeGenerated)
+    if (!codeGenerated)
       outputBuilder.clear()
 
     // And...generate the final output!
     outputBuilder.result.mkString("\n")
   }
 
-  private[this] def buildFullyQualifiedMethodName(currentPackageName: String, currentTraitName: String, methodName: String): String = {
-    if(currentPackageName.isEmpty || currentTraitName.isEmpty || methodName.isEmpty) {
-      throw new Exception(s"""Package, trait, or method is empty: package="$currentPackageName", trait="$currentTraitName", method="$methodName"""")
+  private[this] def buildFullyQualifiedMethodName(
+      currentPackageName: String,
+      currentTraitName: String,
+      methodName: String
+  ): String = {
+    if (currentPackageName.isEmpty || currentTraitName.isEmpty || methodName.isEmpty) {
+      throw new Exception(
+        s"""Package, trait, or method is empty: package="$currentPackageName", trait="$currentTraitName", method="$methodName""""
+      )
     }
     s"$currentPackageName.$currentTraitName.$methodName"
   }
@@ -108,39 +129,57 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
     outputBuilder += "}"
 
   private[this] def withInterceptedMethodSupport(
-    fullyQualifiedMethodName: String,
-    methodName: String,
-    methodAnnotations: ParsedAnnotations,
-    typeParams: Seq[Type.Param],
-    methodParams: Seq[Seq[Term.Param]]): Unit = {
+      fullyQualifiedMethodName: String,
+      methodName: String,
+      methodAnnotations: ParsedAnnotations,
+      typeParams: Seq[Type.Param],
+      methodParams: Seq[Seq[Term.Param]]
+  ): Unit = {
 
-    if(typeParams.nonEmpty) {
-      throw new Exception(s"Type parameters are not supported: $fullyQualifiedMethodName")
+    if (typeParams.nonEmpty) {
+      throw new Exception(
+        s"Type parameters are not supported: $fullyQualifiedMethodName"
+      )
     }
 
-    if(methodAnnotations.containsFloppyEarsParameterAnnotations) {
-      throw new Exception(s"Methods annotated for FloppyEars interception cannot contain parameter annotations: ${supportedParameterAnnotations}, method: $fullyQualifiedMethodName")
+    if (methodAnnotations.containsFloppyEarsParameterAnnotations) {
+      throw new Exception(
+        s"Methods annotated for FloppyEars interception cannot contain parameter annotations: ${supportedParameterAnnotations}, method: $fullyQualifiedMethodName"
+      )
     }
 
-    if(methodAnnotations.includesAnnotation(WiretapRequestTransform) && !methodAnnotations.includesAnnotation(WiretapRequest)) {
-      throw new Exception(s"Cannot transform a request body when there is no request body specified: $fullyQualifiedMethodName. In order to use @$WiretapRequestTransform, you must also use @$WiretapRequest.")
+    if (methodAnnotations.includesAnnotation(WiretapRequestTransform) && !methodAnnotations
+          .includesAnnotation(WiretapRequest)) {
+      throw new Exception(
+        s"Cannot transform a request body when there is no request body specified: $fullyQualifiedMethodName. In order to use @$WiretapRequestTransform, you must also use @$WiretapRequest."
+      )
     }
 
-    if(methodAnnotations.includesAnnotation(WiretapResponseTransform) && !methodAnnotations.includesAnnotation(WiretapResponse)) {
-      throw new Exception(s"Cannot transform a response body when there is no response body specified: $fullyQualifiedMethodName. In order to use @$WiretapResponseTransform, you must also use @$WiretapResponse.")
+    if (methodAnnotations.includesAnnotation(WiretapResponseTransform) && !methodAnnotations
+          .includesAnnotation(WiretapResponse)) {
+      throw new Exception(
+        s"Cannot transform a response body when there is no response body specified: $fullyQualifiedMethodName. In order to use @$WiretapResponseTransform, you must also use @$WiretapResponse."
+      )
     }
 
     val majorVersion = methodAnnotations.majorVersion.getOrElse(
-      throw new Exception(s"No major version specified: $fullyQualifiedMethodName")
+      throw new Exception(
+        s"No major version specified: $fullyQualifiedMethodName"
+      )
     )
 
-    if(majorVersion < 0) {
-      throw new Exception(s"Programmers who specify negative major versions (as was done for $fullyQualifiedMethodName) are less than zero.")
+    if (majorVersion < 0) {
+      throw new Exception(
+        s"Programmers who specify negative major versions (as was done for $fullyQualifiedMethodName) are less than zero."
+      )
     }
 
-    val actionName = methodAnnotations.actionName.getOrElse(methodName.capitalize)
-    if(actionName.isEmpty) {
-      throw new Exception(s"Action name cannot be empty for $fullyQualifiedMethodName")
+    val actionName =
+      methodAnnotations.actionName.getOrElse(methodName.capitalize)
+    if (actionName.isEmpty) {
+      throw new Exception(
+        s"Action name cannot be empty for $fullyQualifiedMethodName"
+      )
     }
 
     val actionRootName = s"${actionName}V${majorVersion}"
@@ -149,7 +188,7 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
     // Pull in imports. In order for a type to be included as a method parameter, it must have been imported by now.
     // Going "whole hog" and pulling in everything.
     val imports = importSet.mkString("\n  ")
-    if(imports.nonEmpty) {
+    if (imports.nonEmpty) {
       outputBuilder += "  // Imports carried over from the unmanaged source file."
       outputBuilder += s"  $imports"
       outputBuilder += "  // END Imports carried over from the unmanaged source file."
@@ -157,18 +196,24 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
     }
     importSet.clear
 
-    val floppyEarsContextGetterName: String = s"${actionRootName.uncapitalize}Context"
+    val floppyEarsContextGetterName: String =
+      s"${actionRootName.uncapitalize}Context"
 
     // Build up associated case class
-    val requestBodyProcessing: Option[BodyProcessing] = methodAnnotations.requestBodyProcessing
-    val responseBodyProcessing: Option[BodyProcessing] = methodAnnotations.responseBodyProcessing
-    val parseRequestJsonBody: Boolean = methodAnnotations.parseRequestJson.getOrElse(true)
+    val requestBodyProcessing: Option[BodyProcessing] =
+      methodAnnotations.requestBodyProcessing
+    val responseBodyProcessing: Option[BodyProcessing] =
+      methodAnnotations.responseBodyProcessing
+    val parseRequestJsonBody: Boolean =
+      methodAnnotations.parseRequestJson.getOrElse(true)
 
-    val filteredMethodParams = methodParams.flatten.map {
-      case param@Term.Param(mods, name, _, _) =>
-        val parameterContext = s"$fullyQualifiedMethodName.${name.syntax}"
-        MethodParameter(parameterContext, param, mods)
-    }.filterNot(_.isIgnored)
+    val filteredMethodParams = methodParams.flatten
+      .map {
+        case param @ Term.Param(mods, name, _, _) =>
+          val parameterContext = s"$fullyQualifiedMethodName.${name.syntax}"
+          MethodParameter(parameterContext, param, mods)
+      }
+      .filterNot(_.isIgnored)
 
     val requestClass = requestBodyProcessing.map(_.bodyClass)
 
@@ -180,7 +225,8 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
       caseClassName,
       requestClass,
       responseClass,
-      filteredMethodParams)
+      filteredMethodParams
+    )
 
     withCaseClassCompanionObject(
       fullyQualifiedMethodName,
@@ -192,21 +238,24 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
       requestBodyProcessing,
       parseRequestJsonBody,
       responseBodyProcessing,
-      filteredMethodParams)
+      filteredMethodParams
+    )
 
     withFloppyEarsContextGetter(
       actionRootName,
       caseClassName,
-      floppyEarsContextGetterName)
+      floppyEarsContextGetterName
+    )
   }
 
   private[this] def withCaseClass(
-    actionName: String,
-    majorVersion: Int,
-    caseClassName: String,
-    requestClass: Option[String],
-    responseClass: Option[String],
-    methodParams: Seq[MethodParameter]): Unit = {
+      actionName: String,
+      majorVersion: Int,
+      caseClassName: String,
+      requestClass: Option[String],
+      responseClass: Option[String],
+      methodParams: Seq[MethodParameter]
+  ): Unit = {
 
     // Build up case class params
     val caseClassParams = List.newBuilder[String]
@@ -240,21 +289,27 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
   }
 
   private[this] def withCaseClassCompanionObject(
-    fullyQualifiedMethodName: String,
-    methodName: String,
-    actionName: String,
-    majorVersion: Int,
-    actionRootName: String,
-    caseClassName: String,
-    requestBodyProcessing: Option[BodyProcessing],
-    parseRequestJsonBody: Boolean,
-    responseBodyProcessing: Option[BodyProcessing],
-    methodParams: Seq[MethodParameter]): Unit = {
+      fullyQualifiedMethodName: String,
+      methodName: String,
+      actionName: String,
+      majorVersion: Int,
+      actionRootName: String,
+      caseClassName: String,
+      requestBodyProcessing: Option[BodyProcessing],
+      parseRequestJsonBody: Boolean,
+      responseBodyProcessing: Option[BodyProcessing],
+      methodParams: Seq[MethodParameter]
+  ): Unit = {
 
     val routeDefinedParams: Map[String, String] = routes.getOrElse(
-      fullyQualifiedMethodName, throw new Exception(s"No route defined for @Wiretap annotated method $fullyQualifiedMethodName"))
+      fullyQualifiedMethodName,
+      throw new Exception(
+        s"No route defined for @Wiretap annotated method $fullyQualifiedMethodName"
+      )
+    )
 
-    def extractMethodParams(methodParam: MethodParameter): String = methodParam.extractExpr(routeDefinedParams)
+    def extractMethodParams(methodParam: MethodParameter): String =
+      methodParam.extractExpr(routeDefinedParams)
 
     val caseClassConstructorParams = List.newBuilder[String]
 
@@ -267,47 +322,60 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
       caseClassConstructorParams += extractMethodParams(methodParam)
     }
 
-    val extractRequestExpr: Seq[String] = requestBodyProcessing.map { case BodyProcessing(rawBodyClass, bodyTransformation) =>
-      caseClassConstructorParams += "_request = _request"
+    val extractRequestExpr: Seq[String] = requestBodyProcessing
+      .map {
+        case BodyProcessing(rawBodyClass, bodyTransformation) =>
+          caseClassConstructorParams += "_request = _request"
 
-      val transformRequestBodyExpr = bodyTransformation.map { case BodyTransformation(targetClass, transformFn) =>
-        s"val _request: $targetClass = $transformFn(requestBody)"
-      }.getOrElse {
-        s"val _request: $rawBodyClass = requestBody"
+          val transformRequestBodyExpr = bodyTransformation
+            .map {
+              case BodyTransformation(targetClass, transformFn) =>
+                s"val _request: $targetClass = $transformFn(requestBody)"
+            }
+            .getOrElse {
+              s"val _request: $rawBodyClass = requestBody"
+            }
+
+          if (parseRequestJsonBody) {
+            Seq(
+              "val requestBodyAsJson: AnyContentAsJson = request.body.asInstanceOf[AnyContentAsJson]",
+              s"val requestBody: $rawBodyClass = Json.fromJson[$rawBodyClass](requestBodyAsJson.json).get",
+              transformRequestBodyExpr
+            )
+          } else {
+            Seq(
+              s"val requestBody = request.body.asInstanceOf[$rawBodyClass]",
+              transformRequestBodyExpr
+            )
+          }
       }
+      .getOrElse(Seq.empty)
 
-      if(parseRequestJsonBody) {
-        Seq(
-          "val requestBodyAsJson: AnyContentAsJson = request.body.asInstanceOf[AnyContentAsJson]",
-          s"val requestBody: $rawBodyClass = Json.fromJson[$rawBodyClass](requestBodyAsJson.json).get",
-          transformRequestBodyExpr
-        )
-      } else {
-        Seq(
-          s"val requestBody = request.body.asInstanceOf[$rawBodyClass]",
-          transformRequestBodyExpr
-        )
+    val extractResultExpr: Seq[String] = responseBodyProcessing
+      .map {
+        case BodyProcessing(rawBodyClass, bodyTransformation) =>
+          caseClassConstructorParams += "_response = _response"
+
+          val transformResponseBodyExpr = bodyTransformation
+            .map {
+              case BodyTransformation(targetClass, transformFn) =>
+                s"val _response: $targetClass = $transformFn(responseBody)"
+            }
+            .getOrElse {
+              s"val _response: $rawBodyClass = responseBody"
+            }
+          Seq(
+            "val responseJsValue = Json.parse(bytes.toArray)",
+            s"val responseBody: $rawBodyClass = Json.fromJson[$rawBodyClass](responseJsValue).get",
+            transformResponseBodyExpr
+          )
       }
-    }.getOrElse(Seq.empty)
+      .getOrElse(Seq.empty)
 
-    val extractResultExpr: Seq[String] = responseBodyProcessing.map { case BodyProcessing(rawBodyClass, bodyTransformation) =>
-      caseClassConstructorParams += "_response = _response"
+    val extractExprs: String =
+      (extractRequestExpr ++ extractResultExpr).mkString("\n      ")
 
-      val transformResponseBodyExpr = bodyTransformation.map { case BodyTransformation(targetClass, transformFn) =>
-        s"val _response: $targetClass = $transformFn(responseBody)"
-      }.getOrElse {
-        s"val _response: $rawBodyClass = responseBody"
-      }
-      Seq(
-         "val responseJsValue = Json.parse(bytes.toArray)",
-        s"val responseBody: $rawBodyClass = Json.fromJson[$rawBodyClass](responseJsValue).get",
-        transformResponseBodyExpr
-      )
-    }.getOrElse(Seq.empty)
-
-    val extractExprs: String = (extractRequestExpr ++ extractResultExpr).mkString("\n      ")
-
-    val requestParamsExpr: String = if(methodParams.nonEmpty) {
+    val requestParamsExpr: String = if (methodParams.nonEmpty) {
       s"""
          |      // Path params must be added to the map after the query string parameters, so parameter names (keys) are overwritten
          |      // in the map. Play should select the path parameters over query string parameters when dispatching to controllers.
@@ -342,7 +410,11 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
          |""".stripMargin
   }
 
-  private[this] def withFloppyEarsContextGetter(rootName: String, caseClassName: String, floppyEarsContextGetterName: String): Unit = {
+  private[this] def withFloppyEarsContextGetter(
+      rootName: String,
+      caseClassName: String,
+      floppyEarsContextGetterName: String
+  ): Unit = {
     outputBuilder +=
       s"""  def $floppyEarsContextGetterName[R[_] <: Request[_]]: ActionContext[R] = {
          |      import ${caseClassName}._
@@ -358,16 +430,21 @@ private[codegen] class FloppyEarsSupportGenerator(routes: Map[String,Map[String,
 
 object FloppyEarsSupportGenerator {
 
-  def generateInterceptors(routes: Map[String, Map[String, String]], outPath: Path, infiles: Seq[String]): Unit =
+  def generateInterceptors(
+      routes: Map[String, Map[String, String]],
+      outPath: Path,
+      infiles: Seq[String]
+  ): Unit =
     infiles.map(p => Paths.get(p)).foreach { inFilePath =>
-
       val bytes: Array[Byte] = java.nio.file.Files.readAllBytes(inFilePath)
       val text: String = new String(bytes, "UTF-8")
       val input: Input = Input.VirtualFile(inFilePath.toString, text)
       val source: Source = input.parse[Source].get
-      val outFileName = s"${inFilePath.getFileName}".replace(""".scala""", """FloppyEarsSupport.scala""")
+      val outFileName = s"${inFilePath.getFileName}"
+        .replace(""".scala""", """FloppyEarsSupport.scala""")
 
-      new FloppyEarsSupportGenerator(routes, inFilePath, source).generate() match {
+      new FloppyEarsSupportGenerator(routes, inFilePath, source)
+        .generate() match {
         case Success(code) =>
           if (code.nonEmpty) {
             val outFilePath = Paths.get(outPath.toString, outFileName)
@@ -375,7 +452,9 @@ object FloppyEarsSupportGenerator {
             println(s"Wrote file $outFilePath")
           }
         case Failure(NonFatal(e)) =>
-          Console.err.println(s"ERROR generating output for code annotated in $inFilePath")
+          Console.err.println(
+            s"ERROR generating output for code annotated in $inFilePath"
+          )
           e.printStackTrace(Console.err)
           System.exit(2)
       }

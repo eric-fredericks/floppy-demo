@@ -6,7 +6,8 @@ import play.api.libs.json.{Json, OFormat}
 
 case class Quantity(numerator: Int, denominator: Int) {
   private def this(arr: Array[Int]) = this(arr(0), arr(1))
-  def this(fraction: String) = this(fraction.split('/').map(_.trim).map(_.toInt))
+  def this(fraction: String) =
+    this(fraction.split('/').map(_.trim).map(_.toInt))
   def this(numerator: Int) = this(numerator, 1)
 }
 
@@ -15,9 +16,9 @@ case object Quantity {
 }
 
 case class Ingredient(
-  quantity: Option[Quantity],
-  unit: Option[String],
-  description: String
+    quantity: Option[Quantity],
+    unit: Option[String],
+    description: String
 )
 
 object Ingredient {
@@ -25,10 +26,10 @@ object Ingredient {
 }
 
 case class RecipeInfo(
-  id: Option[Long],
-  title: String,
-  description: Option[String],
-  category: String
+    id: Option[Long],
+    title: String,
+    description: Option[String],
+    category: String
 )
 
 object RecipeInfo {
@@ -36,9 +37,9 @@ object RecipeInfo {
 }
 
 case class Recipe(
-  info: RecipeInfo,
-  ingredients: Seq[Ingredient],
-  directions: Seq[String]
+    info: RecipeInfo,
+    ingredients: Seq[Ingredient],
+    directions: Seq[String]
 )
 
 object Recipe {

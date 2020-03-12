@@ -20,19 +20,27 @@ trait RecipeService {
 object RecipeService {
   import StopWords._
 
-  private[service] case class RecipeRecord(recipe: Recipe, keywords: Set[String])
+  private[service] case class RecipeRecord(
+      recipe: Recipe,
+      keywords: Set[String]
+  )
 
   implicit class KeywordBuilder(recipe: Recipe) {
     def keywords: Set[String] =
       ((recipe.info.title +:
-      recipe.info.description.toSeq :+
-      recipe.info.category) ++
-      recipe.ingredients.map(_.description) ++
-      recipe.directions).flatMap(_.split(Array(' ', '\t', '\n', '\r'))).map(_.toLowerCase).filter(isStopWord).toSet
+        recipe.info.description.toSeq :+
+        recipe.info.category) ++
+        recipe.ingredients.map(_.description) ++
+        recipe.directions)
+        .flatMap(_.split(Array(' ', '\t', '\n', '\r')))
+        .map(_.toLowerCase)
+        .filter(isStopWord)
+        .toSet
   }
 }
 
-class RecipeServiceImpl(recipeDao: Dao[Recipe])(implicit ec: ExecutionContext) extends RecipeService {
+class RecipeServiceImpl(recipeDao: Dao[Recipe])(implicit ec: ExecutionContext)
+    extends RecipeService {
   import RecipeService._
 
   private[this] val nextId = new AtomicLong(1)
@@ -55,18 +63,24 @@ class RecipeServiceImpl(recipeDao: Dao[Recipe])(implicit ec: ExecutionContext) e
     val id = recipe.info.id.getOrElse(nextId.getAndIncrement())
     val updatedInfo: RecipeInfo = recipe.info.copy(id = Option(id))
     val updatedRecipe: Recipe = recipe.copy(info = updatedInfo)
-    val record = RecipeRecord(recipe = updatedRecipe, keywords = recipe.keywords)
-    recipeDao.synchronized {
-      recipeDao.put(id, updatedRecipe).map { _ =>
-        cache.put(id, record)
-        updatedRecipe
+    val record =
+      RecipeRecord(recipe = updatedRecipe, keywords = recipe.keywords)
+    recipeDao
+      .synchronized {
+        recipeDao.put(id, updatedRecipe).map { _ =>
+          cache.put(id, record)
+          updatedRecipe
+        }
       }
-    }.getOrElse(throw new Exception("Internal Server Error"))
+      .getOrElse(throw new Exception("Internal Server Error"))
   }
 
-  override def search(keywords: Seq[String]): Future[Seq[RecipeInfo]] = Future.successful(
-    cache.values.asScala.toSeq.filter { recipe =>
-        keywords.map(_.toLowerCase).forall(recipe.keywords.contains)
-    }.map(_.recipe.info)
-  )
+  override def search(keywords: Seq[String]): Future[Seq[RecipeInfo]] =
+    Future.successful(
+      cache.values.asScala.toSeq
+        .filter { recipe =>
+          keywords.map(_.toLowerCase).forall(recipe.keywords.contains)
+        }
+        .map(_.recipe.info)
+    )
 }

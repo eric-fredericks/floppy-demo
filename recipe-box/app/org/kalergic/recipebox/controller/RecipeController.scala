@@ -34,43 +34,58 @@ trait RecipeController {
 }
 
 class RecipeControllerImpl(
-  components: ControllerComponents,
-  assets: Assets,
-  recipeService: RecipeService)(
-  implicit floppyContext: FloppyEarsContext[Request],
-  ec: ExecutionContext) extends AbstractController(components) with RecipeController {
+    components: ControllerComponents,
+    assets: Assets,
+    recipeService: RecipeService
+)(implicit floppyContext: FloppyEarsContext[Request], ec: ExecutionContext)
+    extends AbstractController(components)
+    with RecipeController {
 
   import FloppyEarsActionFunction._
   import RecipeControllerFloppyEarsSupport._
 
-  private[this] val GetRecipeV1: ActionContext[Request] = getRecipeV1Context[Request]
-  private[this] val getRecipeAction: ActionBuilder[Request, AnyContent] = Action.withFloppyEars(GetRecipeV1)
+  private[this] val GetRecipeV1: ActionContext[Request] =
+    getRecipeV1Context[Request]
+  private[this] val getRecipeAction: ActionBuilder[Request, AnyContent] =
+    Action.withFloppyEars(GetRecipeV1)
 
-  private[this] val SaveRecipeV1: ActionContext[Request] = saveRecipeV1Context[Request]
-  private[this] val saveRecipeAction: ActionBuilder[Request, AnyContent] = Action.withFloppyEars(SaveRecipeV1)
+  private[this] val SaveRecipeV1: ActionContext[Request] =
+    saveRecipeV1Context[Request]
+  private[this] val saveRecipeAction: ActionBuilder[Request, AnyContent] =
+    Action.withFloppyEars(SaveRecipeV1)
 
-  private[this] val RecipeSearchV1: ActionContext[Request] = recipeSearchV1Context[Request]
-  private[this] val searchAction: ActionBuilder[Request, AnyContent] = Action.withFloppyEars(RecipeSearchV1)
+  private[this] val RecipeSearchV1: ActionContext[Request] =
+    recipeSearchV1Context[Request]
+  private[this] val searchAction: ActionBuilder[Request, AnyContent] =
+    Action.withFloppyEars(RecipeSearchV1)
 
   override def getRecipe(id: Long): EssentialAction = getRecipeAction.async {
     recipeService.getRecipe(id).map {
       case Some(recipe) => Ok(Json.toJson(recipe))
-      case None => NotFound
+      case None         => NotFound
     }
   }
 
-  override def saveRecipe(): EssentialAction = saveRecipeAction.async(parse.json) { request =>
-    Json.fromJson[Recipe](request.body) match {
-      case JsSuccess(recipe, _) =>
-        recipeService.saveRecipe(recipe).map(ri => Ok(Json.toJson(ri)))
-      case JsError(errors) =>
-        Future.successful(BadRequest(Json.toJson(RecipeParseError(errors.flatMap(_._2.flatMap(_.messages)).toSeq))))
+  override def saveRecipe(): EssentialAction =
+    saveRecipeAction.async(parse.json) { request =>
+      Json.fromJson[Recipe](request.body) match {
+        case JsSuccess(recipe, _) =>
+          recipeService.saveRecipe(recipe).map(ri => Ok(Json.toJson(ri)))
+        case JsError(errors) =>
+          Future.successful(
+            BadRequest(
+              Json.toJson(
+                RecipeParseError(errors.flatMap(_._2.flatMap(_.messages)).toSeq)
+              )
+            )
+          )
+      }
     }
-  }
 
-  override def search(keywords: Seq[String]): EssentialAction = searchAction.async {
-    recipeService.search(keywords).map {
-      case recipeInfos@_ => Ok(Json.toJson(recipeInfos))
+  override def search(keywords: Seq[String]): EssentialAction =
+    searchAction.async {
+      recipeService.search(keywords).map {
+        case recipeInfos @ _ => Ok(Json.toJson(recipeInfos))
+      }
     }
-  }
 }

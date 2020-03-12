@@ -1,4 +1,4 @@
 GET     /rest/v1/recipes/:id         org.kalergic.recipebox.controller.RecipeController.getRecipe(id: Long)
 POST    /rest/v1/recipes             org.kalergic.recipebox.controller.RecipeController.saveRecipe
 
-GET    /rest/v1/recipes              org.kalergic.recipebox.controller.RecipeController.search(q: Seq[String])
+GET     /rest/v1/recipes             org.kalergic.recipebox.controller.RecipeController.search(q: Seq[String])

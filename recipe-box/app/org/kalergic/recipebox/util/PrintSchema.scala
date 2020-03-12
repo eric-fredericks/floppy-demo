@@ -9,6 +9,6 @@ object PrintSchema extends App {
   println(schemaStr)
 
   val schema = new Schema.Parser().parse(schemaStr)
-  println("Equal? "+ schema.equals(Recipe.schema))
+  println("Equal? " + schema.equals(Recipe.schema))
   println('\u2588')
 }

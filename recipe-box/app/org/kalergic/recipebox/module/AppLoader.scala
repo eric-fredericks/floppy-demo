@@ -7,7 +7,10 @@ import com.softwaremill.tagging._
 import controllers.AssetsComponents
 import org.kalergic.floppyears.wiretap.ExecutionContextTags.FloppyEarsEC
 import org.kalergic.floppyears.wiretap.{ExecutionContextTags, FloppyEarsClient}
-import org.kalergic.recipebox.controller.{RecipeController, RecipeControllerImpl}
+import org.kalergic.recipebox.controller.{
+  RecipeController,
+  RecipeControllerImpl
+}
 import org.kalergic.recipebox.model.Recipe
 import org.kalergic.recipebox.persist.{Dao, SimpleDaoImpl}
 import org.kalergic.recipebox.service.{RecipeService, RecipeServiceImpl}
@@ -30,13 +33,18 @@ class AppLoader extends ApplicationLoader {
   }
 }
 
-class AppComponents(context: Context) extends BuiltInComponentsFromContext(context) with AhcWSComponents with AssetsComponents with HttpFiltersComponents {
+class AppComponents(context: Context)
+    extends BuiltInComponentsFromContext(context)
+    with AhcWSComponents
+    with AssetsComponents
+    with HttpFiltersComponents {
 
   private val log = Logger(this.getClass)
 
   val dataHome: Path = Paths.get(System.getProperty("user.dir"), "datastore")
 
-  override lazy val controllerComponents: DefaultControllerComponents = wire[DefaultControllerComponents]
+  override lazy val controllerComponents: DefaultControllerComponents =
+    wire[DefaultControllerComponents]
   lazy val prefix: String = "/"
   override lazy val router: Router = wire[Routes]
 
@@ -48,10 +56,14 @@ class AppComponents(context: Context) extends BuiltInComponentsFromContext(conte
     val dispatchers = actorSystem.dispatchers
     wire[FloppyEarsClient]
   }
-  implicit lazy val myFloppyEarsContext: MyFloppyEarsContext = wire[MyFloppyEarsContext]
+  implicit lazy val myFloppyEarsContext: MyFloppyEarsContext =
+    wire[MyFloppyEarsContext]
   lazy val recipeController: RecipeController = wire[RecipeControllerImpl]
   lazy val recipeDao: Dao[Recipe] = {
-    require(Files.isDirectory(dataHome), s"Cannot access data store: ${dataHome.toString}")
+    require(
+      Files.isDirectory(dataHome),
+      s"Cannot access data store: ${dataHome.toString}"
+    )
     val path = Paths.get(dataHome.toString, "recipes")
     path.toFile.mkdirs
     wire[SimpleDaoImpl[Recipe]]

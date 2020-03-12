@@ -8,12 +8,16 @@ private[codegen] object AnnotationDefinitions {
     def name: String
     def params: Seq[AnnotationParamDef]
 
-    def isIncluded(parsedAnnotations: ParsedAnnotations): Boolean = parsedAnnotations.parsed.contains(this)
+    def isIncluded(parsedAnnotations: ParsedAnnotations): Boolean =
+      parsedAnnotations.parsed.contains(this)
 
     override def toString: String = name
   }
 
-  case class AnnotationParamDef(annotationDef: AnnotationDef, paramName: String) {
+  case class AnnotationParamDef(
+      annotationDef: AnnotationDef,
+      paramName: String
+  ) {
     def getParsedValue(parsedAnnotations: ParsedAnnotations): Option[String] =
       for {
         params <- parsedAnnotations.parsed.get(annotationDef)
@@ -28,35 +32,42 @@ private[codegen] object AnnotationDefinitions {
   case object Wiretap extends AnnotationDef {
     override val name: String = "Wiretap"
     val actionName: AnnotationParamDef = AnnotationParamDef(this, "actionName")
-    val majorVersion: AnnotationParamDef = AnnotationParamDef(this, "majorVersion")
+    val majorVersion: AnnotationParamDef =
+      AnnotationParamDef(this, "majorVersion")
     override val params: Seq[AnnotationParamDef] = Seq(actionName, majorVersion)
   }
 
   case object WiretapRequest extends AnnotationDef {
     override val name: String = "WiretapRequest"
-    val requestBody: AnnotationParamDef = AnnotationParamDef(this, "requestBody")
+    val requestBody: AnnotationParamDef =
+      AnnotationParamDef(this, "requestBody")
     val parseJson: AnnotationParamDef = AnnotationParamDef(this, "parseJson")
     override val params: Seq[AnnotationParamDef] = Seq(requestBody, parseJson)
   }
 
   case object WiretapRequestTransform extends AnnotationDef {
     override val name: String = "WiretapRequestTransform"
-    val transformedBody: AnnotationParamDef = AnnotationParamDef(this, "transformedBody")
+    val transformedBody: AnnotationParamDef =
+      AnnotationParamDef(this, "transformedBody")
     val transform: AnnotationParamDef = AnnotationParamDef(this, "transform")
-    override val params: Seq[AnnotationParamDef] = Seq(transformedBody, transform)
+    override val params: Seq[AnnotationParamDef] =
+      Seq(transformedBody, transform)
   }
 
   case object WiretapResponse extends AnnotationDef {
     override val name: String = "WiretapResponse"
-    val responseBody: AnnotationParamDef = AnnotationParamDef(this, "responseBody")
+    val responseBody: AnnotationParamDef =
+      AnnotationParamDef(this, "responseBody")
     override val params: Seq[AnnotationParamDef] = Seq(responseBody)
   }
 
   case object WiretapResponseTransform extends AnnotationDef {
     override val name: String = "WiretapResponseTransform"
-    val transformedBody: AnnotationParamDef = AnnotationParamDef(this, "transformedBody")
+    val transformedBody: AnnotationParamDef =
+      AnnotationParamDef(this, "transformedBody")
     val transform: AnnotationParamDef = AnnotationParamDef(this, "transform")
-    override val params: Seq[AnnotationParamDef] = Seq(transformedBody, transform)
+    override val params: Seq[AnnotationParamDef] =
+      Seq(transformedBody, transform)
   }
 
   case object WiretapIgnore extends AnnotationDef {
@@ -75,7 +86,8 @@ private[codegen] object AnnotationDefinitions {
     WiretapRequest,
     WiretapRequestTransform,
     WiretapResponse,
-    WiretapResponseTransform)
+    WiretapResponseTransform
+  )
 
   val supportedParameterAnnotations: Set[AnnotationDef] = Set(
     WiretapIgnore,
@@ -84,7 +96,8 @@ private[codegen] object AnnotationDefinitions {
 
   val supportedAnnotationsByName: Map[String, AnnotationDef] =
     (supportedMethodAnnotations ++ supportedParameterAnnotations).toSeq.map {
-      annotDef => annotDef.name -> annotDef
+      annotDef =>
+        annotDef.name -> annotDef
     }.toMap
 
 }

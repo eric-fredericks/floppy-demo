@@ -4,7 +4,8 @@ version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.13.1"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala, FloppyEarsPlugin)
+lazy val root =
+  (project in file(".")).enablePlugins(PlayScala, FloppyEarsPlugin)
 pipelineStages := Seq(digest)
 
 libraryDependencies ++= Seq(
