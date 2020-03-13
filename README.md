@@ -8,6 +8,8 @@ The slides for the [NEScala 2020 presentation](./NEScala%202020.pdf).
 ### Floppy Ears
 The library and sbt build plugin to integrate with the fictional external data backend which we will simulate with [Wiremock](http://wiremock.org). See the separate [readme](floppy-ears/README.md) for the library.
 
+_My Mom used to call me "Floppy Ears" when I was a kid when I listened in on conversations...and apparently the name started with my grandmother. Since wiretapping is what we are doing here, I thought this name worked well!_
+
 ### Recipe Box
 A Play 2.8 example web service example which we will use to demonstrate data reporting with Floppy Ears.
 
