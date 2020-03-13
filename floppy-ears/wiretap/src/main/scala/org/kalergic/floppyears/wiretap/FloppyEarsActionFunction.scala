@@ -1,14 +1,13 @@
 package org.kalergic.floppyears.wiretap
 
 import com.softwaremill.tagging._
-import ExecutionContextTags.FloppyEarsEC
+import org.kalergic.floppyears.wiretap.ExecutionContextTags.FloppyEarsEC
 import play.api.Logger
 import play.api.mvc._
 
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 object ExecutionContextTags {
@@ -79,7 +78,7 @@ private[floppyears] class FloppyEarsActionFunction[R[_] <: Request[_]](
         }
       }
       .recover {
-        case NonFatal(_) =>
+        case _ =>
           logger.debug("Reporting skipped because future failed")
       }
 }

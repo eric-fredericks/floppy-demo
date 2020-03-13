@@ -1,4 +1,4 @@
-# Floppy Ears - Endpoint Instrumentation Automation
+# Floppy Ears - Endpoint Instrumentation Automation for Data Reporting
 
 A library and tooling for automatic instrumentation of the endpoints of a Play app (microservice) for data reporting.
 
