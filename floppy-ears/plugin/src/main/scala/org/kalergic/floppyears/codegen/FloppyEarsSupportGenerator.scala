@@ -111,6 +111,7 @@ private[codegen] class FloppyEarsSupportGenerator(
     outputBuilder += "import org.kalergic.floppyears.wiretap.ParamNameNormalization._"
     outputBuilder += "import org.kalergic.floppyears.wiretap.PathParamExtraction._"
     outputBuilder += "import play.api.mvc.{ AnyContentAsJson, Request }"
+    outputBuilder += "import play.api.libs.json._"
     outputBuilder += "import scala.concurrent.duration._"
     outputBuilder += "import scala.language.higherKinds"
     outputBuilder += "import scala.language.postfixOps"
@@ -338,8 +339,8 @@ private[codegen] class FloppyEarsSupportGenerator(
 
           if (parseRequestJsonBody) {
             Seq(
-              "val requestBodyAsJson: AnyContentAsJson = request.body.asInstanceOf[AnyContentAsJson]",
-              s"val requestBody: $rawBodyClass = Json.fromJson[$rawBodyClass](requestBodyAsJson.json).get",
+              "val requestBodyAsJson: JsValue = request.body.asInstanceOf[JsValue]",
+              s"val requestBody: $rawBodyClass = Json.fromJson[$rawBodyClass](requestBodyAsJson).get",
               transformRequestBodyExpr
             )
           } else {
