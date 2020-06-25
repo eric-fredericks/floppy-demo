@@ -52,7 +52,6 @@ class AppComponents(context: Context)
   lazy val floppyEarsClient: FloppyEarsClient = {
     val floppyEarsBaseUrl = "http://localhost:8080"
 
-    //ejf-fixMe: convenience method on FloppyEarsActionFunction object.
     val dispatchers = actorSystem.dispatchers
     wire[FloppyEarsClient]
   }

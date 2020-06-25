@@ -44,8 +44,6 @@ case class Recipe(
 
 object Recipe {
   implicit val format: OFormat[Recipe] = Json.format[Recipe]
-
-  //ejf-fixMe: needed?
   implicit val schema: Schema = AvroSchema[Recipe]
 }
 
