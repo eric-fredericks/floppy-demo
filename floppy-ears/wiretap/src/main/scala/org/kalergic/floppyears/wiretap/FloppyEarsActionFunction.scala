@@ -7,7 +7,7 @@ import play.api.mvc._
 
 import scala.concurrent._
 import scala.concurrent.duration._
-import scala.language.postfixOps
+import scala.language.{higherKinds, postfixOps}
 import scala.util.{Failure, Success, Try}
 
 object ExecutionContextTags {

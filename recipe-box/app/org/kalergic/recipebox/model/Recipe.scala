@@ -37,9 +37,9 @@ object RecipeInfo {
 }
 
 case class Recipe(
-    info: RecipeInfo,
-    ingredients: Seq[Ingredient],
-    directions: Seq[String]
+  info: RecipeInfo,
+  ingredients: Seq[Ingredient],
+  directions: Seq[String]
 )
 
 object Recipe {
