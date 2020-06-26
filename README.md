@@ -4,6 +4,7 @@
 
 ### Slides
 The slides for the [NEScala 2020 presentation](./NEScala%202020.pdf).
+
 The slides for the [Chicago Area Scala Meetup June 25, 2020 presentation](./CASE_2020-06-25.pdf).
 
 ### Floppy Ears
