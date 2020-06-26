@@ -4,6 +4,7 @@
 
 ### Slides
 The slides for the [NEScala 2020 presentation](./NEScala%202020.pdf).
+The slides for the [Chicago Area Scala Meetup June 25, 2020 presentation](./CASE_2020-06-25.pdf).
 
 ### Floppy Ears
 The library and sbt build plugin to integrate with the fictional external data backend which we will simulate with [Wiremock](http://wiremock.org). See the separate [readme](floppy-ears/README.md) for the library.
